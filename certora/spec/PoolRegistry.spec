@@ -34,7 +34,8 @@ methods {
 
     // helper from the harness
     getPoolsPoolAddress(uint256) returns (address) envfree;
-    //  method summaries
+    
+    // method summaries
     batch(bytes[], bool) // summarize as func that does nothing?
     getConstantLength() returns(uint256) => ALWAYS(3); 
 

@@ -1,3 +1,4 @@
+import "@nomiclabs/hardhat-vyper"
 import "@nomiclabs/hardhat-ethers"
 import "@nomiclabs/hardhat-waffle"
 import "@nomiclabs/hardhat-web3"
@@ -10,9 +11,8 @@ import "hardhat-spdx-license-identifier"
 
 import { HardhatUserConfig, task } from "hardhat/config"
 import dotenv from "dotenv"
-import { ethers } from "ethers"
 import { ALCHEMY_BASE_URL, CHAIN_ID } from "./utils/network"
-import { PROD_DEPLOYER_ADDRESS } from "./utils/accounts"
+import { MULTISIG_ADDRESSES, PROD_DEPLOYER_ADDRESS } from "./utils/accounts"
 import { Deployment } from "hardhat-deploy/dist/types"
 import { HttpNetworkUserConfig } from "hardhat/types"
 
@@ -32,6 +32,12 @@ let config: HardhatUserConfig = {
     mainnet: {
       url: ALCHEMY_BASE_URL[CHAIN_ID.MAINNET] + process.env.ALCHEMY_API_KEY,
       deploy: ["./deploy/mainnet/"],
+      verify: {
+        etherscan: {
+          apiUrl: "https://api.etherscan.io",
+          apiKey: process.env.ETHERSCAN_API ?? "NO_KEY",
+        },
+      },
     },
     ropsten: {
       url: ALCHEMY_BASE_URL[CHAIN_ID.ROPSTEN] + process.env.ALCHEMY_API_KEY,
@@ -51,12 +57,15 @@ let config: HardhatUserConfig = {
       deploy: ["./deploy/arbitrum/"],
     },
     arbitrum_mainnet: {
-      url:
-        ALCHEMY_BASE_URL[CHAIN_ID.ARBITRUM_MAINNET] +
-        process.env.ALCHEMY_API_KEY,
+      url: "https://arb1.arbitrum.io/rpc",
       chainId: 42161,
-      gasPrice: ethers.utils.parseUnits("2", "gwei").toNumber(),
       deploy: ["./deploy/arbitrum/"],
+      verify: {
+        etherscan: {
+          apiUrl: "https://api.arbiscan.io",
+          apiKey: "6IJ9VIDV55VNTPAA8TRKQREVWQJDA98FEK",
+        },
+      },
     },
     optimism_testnet: {
       url: "https://kovan.optimism.io",
@@ -70,6 +79,12 @@ let config: HardhatUserConfig = {
       url: "https://mainnet.optimism.io",
       chainId: 10,
       deploy: ["./deploy/optimism/"],
+      verify: {
+        etherscan: {
+          apiUrl: "https://api-optimistic.etherscan.io",
+          apiKey: "8A88XPGCP6IQXRJGM5NKMBMMGT7NNRBIMF",
+        },
+      },
     },
     fantom_testnet: {
       url: "https://rpc.testnet.fantom.network/",
@@ -83,6 +98,12 @@ let config: HardhatUserConfig = {
       url: "https://rpc.ftm.tools/",
       chainId: 250,
       deploy: ["./deploy/fantom/"],
+      verify: {
+        etherscan: {
+          apiUrl: "https://api.ftmscan.com",
+          apiKey: "YKFDUZYGB28APW5KQQI4MH1CKRZN8IRYMP",
+        },
+      },
     },
     evmos_testnet: {
       url: "https://eth.bd.evmos.dev:8545",
@@ -158,6 +179,16 @@ let config: HardhatUserConfig = {
       },
     },
   },
+  vyper: {
+    compilers: [
+      { version: "0.2.12" },
+      { version: "0.2.16" },
+      { version: "0.2.15" },
+      { version: "0.2.7" },
+      { version: "0.3.1" },
+      { version: "0.3.2" },
+    ],
+  },
   typechain: {
     outDir: "./build/typechain/",
     target: "ethers-v5",
@@ -192,15 +223,18 @@ let config: HardhatUserConfig = {
       2221: 0, // use the same address on kava testnet
       3: 0, // use the same address on ropsten
     },
+    multisig: {
+      default: 0,
+      1: MULTISIG_ADDRESSES[1],
+      42161: MULTISIG_ADDRESSES[42161],
+      10: MULTISIG_ADDRESSES[10],
+      250: MULTISIG_ADDRESSES[250],
+    },
   },
   spdxLicenseIdentifier: {
     overwrite: false,
     runOnCompile: true,
   },
-}
-
-if (process.env.ETHERSCAN_API) {
-  config = { ...config, etherscan: { apiKey: process.env.ETHERSCAN_API } }
 }
 
 if (process.env.ACCOUNT_PRIVATE_KEYS) {
@@ -284,6 +318,9 @@ if (process.env.FORK_NETWORK && config.networks) {
       ...config.namedAccounts,
       deployer: {
         [String(forkingChainId)]: PROD_DEPLOYER_ADDRESS,
+      },
+      multisig: {
+        [String(forkingChainId)]: MULTISIG_ADDRESSES[forkingChainId.toString()],
       },
     },
     external: {
