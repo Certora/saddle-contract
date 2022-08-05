@@ -1,11 +1,10 @@
 certoraRun \
-    certora/munged/registries/PoolRegistry.sol certora/helpers/DummyERC20A.sol certora/helpers/DummyERC20B.sol\
-    --verify PoolRegistry:certora/ComplexityCheck/complexity.spec \
+    certora/munged/Swap.sol certora/helpers/DummyERC20A.sol certora/helpers/DummyERC20B.sol\
+    --verify Swap:certora/ComplexityCheck/complexity.spec \
     --staging \
     --optimistic_loop \
-    --loop_iter 3 \
-    --send_only \
-    --msg "PoolRegistry complexity check"
+    --loop_iter 2 \
+    --msg "Swap complexity check summed"
 
 
 # certoraRun  contracts/core/connext/facets/BaseConnextFacet.sol ComplexityCheck/DummyERC20A.sol ComplexityCheck/DummyERC20B.sol \
